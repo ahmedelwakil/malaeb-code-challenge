@@ -1,0 +1,44 @@
+version: '3'
+volumes:
+  db-data:
+  cache-data:
+    driver: local
+
+services:
+  malaeb-api:
+    build: .
+    restart: always
+    container_name: malaeb-api
+    volumes:
+      - ./:/var/www/html
+    ports:
+      - 8097:80
+    depends_on:
+      - malaeb-mysql
+      - malaeb-redis
+
+  malaeb-mysql:
+    image: mysql:8.0.29
+    restart: always
+    container_name: malaeb-mysql
+    volumes:
+      - db-data:/var/lib/mysql
+    ports:
+      - 8098:3306
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_HOST=malaeb-mysql
+      - MYSQL_PORT=8098
+      - MYSQL_DATABASE=malaeb
+      - MYSQL_USER=malaeb-user
+      - MYSQL_PASSWORD=malaeb-pass
+
+  malaeb-redis:
+    image: redis:6.2-alpine
+    restart: always
+    container_name: malaeb-redis
+    volumes:
+      - cache-data:/data
+    ports:
+      - '6379:6379'
+    command: redis-server --save 20 1 --loglevel warning --requirepass malaeb
